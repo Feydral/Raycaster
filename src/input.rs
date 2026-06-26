@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
 use crossterm::event::{
-    self, Event, KeyCode, KeyEvent, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags,
-    PushKeyboardEnhancementFlags,
+    self, Event, KeyCode, KeyEvent, KeyEventKind, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
 };
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
@@ -34,32 +33,36 @@ impl Input {
         }
     }
 
-    pub fn update(&mut self) -> std::io::Result<()> {
-        self.down_keys.clear();
-        self.up_keys.clear();
+pub fn update(&mut self) -> std::io::Result<()> {
+    self.down_keys.clear();
+    self.up_keys.clear();
 
-        while event::poll(Duration::from_millis(0))? {
-            if let Event::Key(KeyEvent { code, kind, .. }) = event::read()? {
+    while event::poll(Duration::from_millis(0))? {
+        if let Event::Key(KeyEvent { code, kind, .. }) = event::read()? {
+            if self.enhanced {
                 match kind {
-                    crossterm::event::KeyEventKind::Press => {
-                        if !self.held_keys.contains(&code) {
+                    KeyEventKind::Press => {
+                        if self.held_keys.insert(code) {
                             self.down_keys.insert(code);
-                            self.held_keys.insert(code);
                         }
                     }
-                    crossterm::event::KeyEventKind::Release => {
-                        if self.held_keys.contains(&code) {
+                    KeyEventKind::Release => {
+                        if self.held_keys.remove(&code) {
                             self.up_keys.insert(code);
-                            self.held_keys.remove(&code);
                         }
                     }
                     _ => {}
                 }
+            } else {
+                if kind == KeyEventKind::Press {
+                    self.down_keys.insert(code);
+                    self.up_keys.insert(code);
+                }
             }
         }
-
-        Ok(())
     }
+    Ok(())
+}
 
     pub fn is_key_pressed(&self, key: KeyCode) -> bool {
         self.held_keys.contains(&key)
