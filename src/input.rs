@@ -1,6 +1,10 @@
 #![allow(dead_code)]
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{
+    self, Event, KeyCode, KeyEvent, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags,
+    PushKeyboardEnhancementFlags,
+};
+use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::collections::HashSet;
 use std::time::Duration;
@@ -9,16 +13,24 @@ pub struct Input {
     held_keys: HashSet<KeyCode>,
     down_keys: HashSet<KeyCode>,
     up_keys: HashSet<KeyCode>,
+    enhanced: bool,
 }
 
 impl Input {
     pub fn new() -> Self {
         enable_raw_mode().unwrap();
 
+        let enhanced = execute!(
+            std::io::stdout(),
+            PushKeyboardEnhancementFlags(KeyboardEnhancementFlags::REPORT_EVENT_TYPES)
+        )
+        .is_ok();
+
         Self {
             held_keys: HashSet::new(),
             down_keys: HashSet::new(),
             up_keys: HashSet::new(),
+            enhanced,
         }
     }
 
@@ -64,6 +76,10 @@ impl Input {
 
 impl Drop for Input {
     fn drop(&mut self) {
+        if self.enhanced {
+            let _ = execute!(std::io::stdout(), PopKeyboardEnhancementFlags);
+        }
+
         disable_raw_mode().unwrap();
     }
 }

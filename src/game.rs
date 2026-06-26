@@ -2,6 +2,8 @@ pub mod camera;
 pub mod player;
 
 use crossterm::event::KeyCode;
+use crossterm::execute;
+use crossterm::terminal::SetTitle;
 
 use crate::canvas::Canvas;
 use crate::canvas::draw::Align;
