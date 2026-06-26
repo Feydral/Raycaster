@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::collections::HashSet;
 use std::time::Duration;
 
@@ -12,6 +13,8 @@ pub struct Input {
 
 impl Input {
     pub fn new() -> Self {
+        enable_raw_mode().unwrap();
+
         Self {
             held_keys: HashSet::new(),
             down_keys: HashSet::new(),
@@ -56,5 +59,11 @@ impl Input {
 
     pub fn is_key_up(&self, key: KeyCode) -> bool {
         self.up_keys.contains(&key)
+    }
+}
+
+impl Drop for Input {
+    fn drop(&mut self) {
+        disable_raw_mode().unwrap();
     }
 }
