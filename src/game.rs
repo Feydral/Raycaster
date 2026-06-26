@@ -1,9 +1,12 @@
+pub mod camera;
+pub mod player;
+
 use crossterm::event::KeyCode;
-use glam::Vec2;
 
 use crate::canvas::Canvas;
 use crate::canvas::draw::Align;
 use crate::canvas::font::Font;
+use crate::game::player::Player;
 use crate::input::Input;
 use crate::math::mathi;
 use crate::raycaster;
@@ -11,21 +14,8 @@ use crate::raycaster::map::Map;
 
 pub struct Game {
     canvas: Canvas,
-
-    player_pos: Vec2,
-    view_dir: Vec2,
     map: Map,
-
-    fov: f32,
-    rotation_speed: f32,
-    jump_strength: f32,
-    jump_offset: f32,
-    jump_velocity: f32,
-
-    velocity: Vec2,
-
-    acceleration: f32,
-    friction: f32,
+    player: Player,
 
     flashlight_radius: f32,
     flashlight_falloff: f32,
@@ -34,7 +24,6 @@ pub struct Game {
     ambient: f32,
 
     enable_debug_features: bool,
-
     depth_buffer: Vec<f32>,
 
     font: Font,
@@ -48,46 +37,9 @@ pub struct Game {
 impl Game {
     const MAX_DEPTH: f32 = 30.0;
 
-    pub fn new() -> Self {
-        Self {
-            canvas: Canvas::new(),
-
-            player_pos: Vec2::new(1.0, 1.0),
-            view_dir: Vec2::new(1.0, 0.0),
-            map: Map::new(),
-
-            fov: 80.0,
-            rotation_speed: 2.0,
-            jump_strength: 2.5,
-            jump_offset: 0.0,
-            jump_velocity: 0.0,
-
-            velocity: Vec2::ZERO,
-
-            acceleration: 50.0,
-            friction: 12.0,
-
-            flashlight_radius: 0.6,
-            flashlight_falloff: 1.5,
-            flashlight_brightness: 0.4,
-            flashlight_depth_falloff: 0.3,
-            ambient: 0.03,
-
-            enable_debug_features: false,
-
-            depth_buffer: Vec::new(),
-
-            font: Font::load_from_file("assets/default.ccfont"),
-            font_bold: Font::load_from_file("assets/default_bold.ccfont"),
-
-            time: 0.0,
-            fps: 0.0,
-            fps_display_timer: 1.0,
-        }
-    }
-
-    pub fn on_start(&mut self) {
-        self.map.grid = vec![
+    pub fn on_start() -> Self {
+        let mut map = Map::new();
+        map.grid = vec![
             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             vec![0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
             vec![0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0],
@@ -109,6 +61,29 @@ impl Game {
             vec![0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ];
+
+        Self {
+            canvas: Canvas::new(),
+            map,
+            player: Player::on_start(),
+
+            flashlight_radius: 0.6,
+            flashlight_falloff: 1.5,
+            flashlight_brightness: 0.4,
+            flashlight_depth_falloff: 0.3,
+            ambient: 0.03,
+
+            enable_debug_features: false,
+
+            depth_buffer: Vec::new(),
+
+            font: Font::load_from_file("assets/default.ccfont"),
+            font_bold: Font::load_from_file("assets/default_bold.ccfont"),
+
+            time: 0.0,
+            fps: 0.0,
+            fps_display_timer: 1.0,
+        }
     }
 
     pub fn on_update(&mut self, input: &Input, dt: f32) {
@@ -118,92 +93,13 @@ impl Game {
             self.canvas.resize(new_w, new_h);
         }
 
+        self.player.on_update(input, dt, &self.map);
+
         if input.is_key_down(KeyCode::Char('1')) {
             self.enable_debug_features = true;
         }
         if input.is_key_down(KeyCode::Char('2')) {
             self.enable_debug_features = false;
-        }
-
-        if input.is_key_pressed(KeyCode::Char('a')) {
-            let cos_a = (-self.rotation_speed * dt).cos();
-            let sin_a = (-self.rotation_speed * dt).sin();
-
-            let new_x = self.view_dir.x * cos_a - self.view_dir.y * sin_a;
-            let new_y = self.view_dir.x * sin_a + self.view_dir.y * cos_a;
-
-            self.view_dir = Vec2::new(new_x, new_y).normalize();
-        }
-
-        if input.is_key_pressed(KeyCode::Char('d')) {
-            let cos_a = (self.rotation_speed * dt).cos();
-            let sin_a = (self.rotation_speed * dt).sin();
-
-            let new_x = self.view_dir.x * cos_a - self.view_dir.y * sin_a;
-            let new_y = self.view_dir.x * sin_a + self.view_dir.y * cos_a;
-
-            self.view_dir = Vec2::new(new_x, new_y).normalize();
-        }
-
-        let mut move_input = Vec2::ZERO;
-
-        if input.is_key_pressed(KeyCode::Char('w')) {
-            move_input += self.view_dir;
-        }
-
-        if input.is_key_pressed(KeyCode::Char('s')) {
-            move_input -= self.view_dir;
-        }
-
-        let right = Vec2::new(self.view_dir.y, -self.view_dir.x);
-
-        if input.is_key_pressed(KeyCode::Char('q')) {
-            move_input -= right;
-        }
-
-        if input.is_key_pressed(KeyCode::Char('e')) {
-            move_input += right;
-        }
-
-        if move_input.length() > 0.0 {
-            move_input = move_input.normalize();
-
-            self.velocity += move_input * self.acceleration * dt;
-        }
-
-        self.velocity *= (1.0 - self.friction * dt).max(0.0);
-
-        if input.is_key_down(KeyCode::Char(' ')) && self.jump_offset == 0.0 {
-            self.jump_velocity = self.jump_strength;
-
-            if self.velocity.length() > 0.01 {
-                self.velocity += self.view_dir * 1.8;
-            }
-        }
-
-        self.jump_velocity -= 9.81 * dt;
-        self.jump_offset += self.jump_velocity * dt;
-
-        if self.jump_offset <= 0.0 {
-            self.jump_offset = 0.0;
-            self.jump_velocity = 0.0;
-        }
-
-        let movement = self.velocity * dt;
-
-        let new_x = self.player_pos.x + movement.x;
-        let new_y = self.player_pos.y + movement.y;
-
-        if !self.map.is_wall(new_x, self.player_pos.y) {
-            self.player_pos.x = new_x;
-        } else {
-            self.velocity.x = 0.0;
-        }
-
-        if !self.map.is_wall(self.player_pos.x, new_y) {
-            self.player_pos.y = new_y;
-        } else {
-            self.velocity.y = 0.0;
         }
 
         if self.enable_debug_features {
@@ -241,30 +137,26 @@ impl Game {
         self.fps_display_timer -= dt;
         if self.fps_display_timer <= 0.0 {
             self.fps = 1.0 / dt;
-
-            if self.fps as u32 == 67 {
-                self.fps = 68.0;
-            }
-
             self.fps_display_timer = 1.0;
         }
     }
 
     pub fn on_render(&mut self) {
         let hit_infos = raycaster::cast_rays(
-            self.player_pos,
-            self.view_dir,
-            self.fov.to_radians(),
+            self.player.position,
+            self.player.camera.view_direction,
+            self.player.camera.fov.to_radians(),
             self.canvas.width(),
             &self.map,
         );
 
         let projection_dist = (self.canvas.width() as f32 / 2.0)
-            / (self.fov / 2.0 * std::f32::consts::PI / 180.0).tan();
+            / (self.player.camera.fov / 2.0 * std::f32::consts::PI / 180.0).tan();
         let screen_height = self.canvas.height() as f32;
         let screen_center = screen_height / 2.0;
 
-        let horizon = screen_center - (projection_dist / Self::MAX_DEPTH * 2.0) * self.jump_offset;
+        let horizon =
+            screen_center - (projection_dist / Self::MAX_DEPTH * 2.0) * self.player.jump_offset;
 
         let cx = self.canvas.width() as f32 / 2.0;
         let cy = self.canvas.height() as f32 / 2.0;
@@ -300,7 +192,7 @@ impl Game {
             let distance = hit.distance.max(0.0001);
             let wall_height = (projection_dist / distance).min(screen_height * 2.0);
 
-            let wall_center = screen_center + wall_height * -self.jump_offset;
+            let wall_center = screen_center + wall_height * -self.player.jump_offset;
 
             let wall_start = (wall_center - wall_height / 2.0).max(0.0) as u32;
             let wall_end = (wall_center + wall_height / 2.0).min(screen_height) as u32;
@@ -409,14 +301,14 @@ impl Game {
                 .at(x, 5)
                 .align(Align::Right)
                 .color(green)
-                .float(self.player_pos.x, 2, false);
+                .float(self.player.position.x, 2, false);
 
             self.canvas
                 .draw(&self.font)
                 .at(x, 15)
                 .align(Align::Right)
                 .color(green)
-                .float(self.player_pos.y, 2, false);
+                .float(self.player.position.y, 2, false);
 
             let red = mathi::rgb_to_u32(200, 0, 0);
 
@@ -426,7 +318,12 @@ impl Game {
                 .align(Align::Right)
                 .color(red)
                 .float(
-                    self.view_dir.y.atan2(self.view_dir.x).to_degrees(),
+                    self.player
+                        .camera
+                        .view_direction
+                        .y
+                        .atan2(self.player.camera.view_direction.x)
+                        .to_degrees(),
                     2,
                     false,
                 );

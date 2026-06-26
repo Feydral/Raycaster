@@ -11,12 +11,10 @@ use crossterm::event::KeyCode;
 use crate::{game::Game, input::Input};
 
 fn main() {
-    let mut game = Game::new();
+    let mut game = Game::on_start();
     let mut input = Input::new();
 
     let mut last_time = Instant::now();
-
-    game.on_start();
 
     loop {
         let now = std::time::Instant::now();
