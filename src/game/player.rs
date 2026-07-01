@@ -1,7 +1,8 @@
 use crossterm::event::KeyCode;
 use glam::Vec2;
+use termcanvas::prelude::*;
 
-use crate::{game::camera::Camera, input::Input, raycaster::map::Map};
+use crate::{game::camera::Camera, raycaster::map::Map};
 
 pub struct Player {
     pub camera: Camera,

@@ -2,13 +2,9 @@ pub mod camera;
 pub mod player;
 
 use crossterm::event::KeyCode;
+use termcanvas::prelude::*;
 
-use crate::canvas::Canvas;
-use crate::canvas::draw::Align;
-use crate::canvas::font::Font;
 use crate::game::player::Player;
-use crate::input::Input;
-use crate::math::mathi;
 use crate::raycaster;
 use crate::raycaster::map::Map;
 
@@ -165,7 +161,7 @@ impl Game {
         let total_pixels = (self.canvas.width() * self.canvas.height()) as usize;
         self.depth_buffer.resize(total_pixels, 1.0);
 
-        self.canvas.clear();
+        self.canvas.clear(mathi::rgb_to_u32(0, 0, 0));
 
         for y in 0..self.canvas.height() {
             let dist_from_horizon = (y as f32 - horizon).abs().max(0.5);

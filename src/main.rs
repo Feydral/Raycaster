@@ -1,14 +1,11 @@
-mod canvas;
 mod game;
-mod input;
-mod math;
 mod raycaster;
 
 use std::time::Instant;
-
+use termcanvas::prelude::*;
 use crossterm::event::KeyCode;
 
-use crate::{game::Game, input::Input};
+use crate::game::Game;
 
 fn main() {
     let mut game = Game::on_start();

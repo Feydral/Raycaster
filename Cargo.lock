@@ -189,6 +189,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm",
  "glam",
+ "termcanvas",
 ]
 
 [[package]]
@@ -280,6 +281,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "termcanvas"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ee00ed2ad0bae617522fbb64e86795fc84e2e6a345f964d8a101ef31c093856"
+dependencies = [
+ "crossterm",
+ "glam",
 ]
 
 [[package]]
