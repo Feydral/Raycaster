@@ -5,6 +5,14 @@ pub struct Map {
 }
 
 impl Map {
+    pub fn from_rows(rows: &[&[u8]]) -> Self {
+        Self {
+            width: rows[0].len() as i32,
+            height: rows.len() as i32,
+            cells: rows.iter().flat_map(|row| row.iter().copied()).collect(),
+        }
+    }
+
     pub fn is_wall(&self, x: i32, y: i32) -> bool {
         if x < 0 || y < 0 || x >= self.width || y >= self.height {
             return true;
