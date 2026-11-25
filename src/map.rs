@@ -1,3 +1,5 @@
+use glam::Vec2;
+
 pub struct Map {
     pub width: i32,
     pub height: i32,
@@ -18,5 +20,9 @@ impl Map {
             return true;
         }
         self.cells[(y * self.width + x) as usize] != 0
+    }
+
+    pub fn is_wall_at(&self, position: Vec2) -> bool {
+        self.is_wall(position.x.floor() as i32, position.y.floor() as i32)
     }
 }
