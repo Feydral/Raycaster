@@ -60,6 +60,8 @@ fn main() {
 
         player.update(&read_player_input(&input), dt, &map);
 
+        target.sync_size();
+
         let camera = &player.camera;
         let hits = raycaster::cast_rays(
             player.position,

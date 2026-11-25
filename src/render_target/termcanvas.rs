@@ -39,6 +39,15 @@ impl RenderTarget for TermcanvasTarget {
             .set_pixel(x, flipped_y, mathi::rgb_to_u32(r, g, b));
     }
 
+    fn sync_size(&mut self) {
+        let width = Canvas::terminal_width();
+        let height = Canvas::terminal_height();
+
+        if width != self.canvas.width() || height != self.canvas.height() {
+            self.canvas.resize(width, height);
+        }
+    }
+
     fn present(&mut self) {
         self.canvas.render();
     }
