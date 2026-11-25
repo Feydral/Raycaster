@@ -43,3 +43,20 @@ pub fn cast_ray(origin: Vec2, direction: Vec2, map: &Map) -> Option<f32> {
 
     None
 }
+
+pub fn cast_rays(
+    origin: Vec2,
+    view_direction: Vec2,
+    fov: f32,
+    resolution: u32,
+    map: &Map,
+) -> Vec<Option<f32>> {
+    let plane = Vec2::new(-view_direction.y, view_direction.x) * (fov * 0.5).tan();
+
+    (0..resolution)
+        .map(|i| {
+            let camera_x = 2.0 * (i as f32 / resolution as f32) - 1.0;
+            cast_ray(origin, view_direction + plane * camera_x, map)
+        })
+        .collect()
+}
