@@ -25,4 +25,11 @@ impl Map {
     pub fn is_wall_at(&self, position: Vec2) -> bool {
         self.is_wall(position.x.floor() as i32, position.y.floor() as i32)
     }
+
+    pub fn overlaps_wall(&self, center: Vec2, radius: f32) -> bool {
+        self.is_wall_at(center + Vec2::new(-radius, -radius))
+            || self.is_wall_at(center + Vec2::new(radius, -radius))
+            || self.is_wall_at(center + Vec2::new(-radius, radius))
+            || self.is_wall_at(center + Vec2::new(radius, radius))
+    }
 }

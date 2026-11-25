@@ -70,7 +70,7 @@ fn main() {
             target.width(),
             &map,
         );
-        renderer::render(&mut target, &hits, camera.fov);
+        renderer::render(&mut target, &hits, camera.fov, player.jump_offset);
 
         sleep(Duration::from_millis(16));
     }
@@ -97,5 +97,6 @@ fn read_player_input(input: &Input) -> PlayerInput {
         forward: axis(input, 'w', 's'),
         strafe: axis(input, 'e', 'q'),
         turn: axis(input, 'd', 'a'),
+        jump: input.is_key_down(KeyCode::Char(' ')),
     }
 }
