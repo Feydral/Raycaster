@@ -1,5 +1,5 @@
 mod camera;
-mod light;
+mod flashlight;
 mod map;
 mod player;
 mod raycaster;
@@ -12,7 +12,7 @@ use crossterm::event::KeyCode;
 use glam::Vec3;
 use termcanvas::prelude::Input;
 
-use crate::light::Light;
+use crate::flashlight::Flashlight;
 use crate::map::Map;
 use crate::player::{Player, PlayerInput};
 use crate::render_target::RenderTarget;
@@ -73,12 +73,12 @@ fn main() {
             &map,
         );
 
-        let flashlight = Light::flashlight(
+        let flashlight = Flashlight::new(
             Vec3::new(player.position.x, player.position.y, player.eye_height()),
             Vec3::new(camera.view_direction.x, camera.view_direction.y, 0.0),
         );
 
-        renderer::render(&mut target, &player, &hits, &[flashlight]);
+        renderer::render(&mut target, &player, &hits, &flashlight);
     }
 
     target.end();

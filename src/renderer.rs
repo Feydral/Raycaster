@@ -1,6 +1,6 @@
 use glam::{Vec2, Vec3};
 
-use crate::light::{Light, illuminate};
+use crate::flashlight::Flashlight;
 use crate::player::Player;
 use crate::raycaster::Hit;
 use crate::render_target::{RenderTarget, Rgb};
@@ -20,7 +20,7 @@ pub fn render(
     target: &mut dyn RenderTarget,
     player: &Player,
     hits: &[Option<Hit>],
-    lights: &[Light],
+    flashlight: &Flashlight,
 ) {
     let width = target.width();
     let height = target.height();
@@ -50,7 +50,7 @@ pub fn render(
             let ground = player.position + (view_direction + plane * camera_x) * row_distance;
             let point = Vec3::new(ground.x, ground.y, surface_height);
 
-            let light = illuminate(lights, AMBIENT, point, normal);
+            let light = flashlight.illuminate(AMBIENT, point, normal);
             target.set_pixel(x, y, to_rgb(albedo, light));
         }
     }
@@ -74,7 +74,7 @@ pub fn render(
             let z = eye_height - (y as f32 + 0.5 - screen_center) / wall_pixels;
             let point = Vec3::new(hit.position.x, hit.position.y, z);
 
-            let light = illuminate(lights, AMBIENT, point, normal);
+            let light = flashlight.illuminate(AMBIENT, point, normal);
             target.set_pixel(x as u32, y, to_rgb(WALL_ALBEDO, light));
         }
     }
