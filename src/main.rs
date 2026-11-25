@@ -17,9 +17,9 @@ fn main() {
     let origin = Vec2::new(0.5, 1.5);
     let view_direction = Vec2::new(1.0, 0.0);
 
-    let distances = raycaster::cast_rays(origin, view_direction, 90f32.to_radians(), 10, &map);
+    let hits = raycaster::cast_rays(origin, view_direction, 90f32.to_radians(), 10, &map);
 
-    for (i, distance) in distances.iter().enumerate() {
-        println!("{i}: {distance:?}");
+    for (i, hit) in hits.iter().enumerate() {
+        println!("{i}: {hit:?}");
     }
 }

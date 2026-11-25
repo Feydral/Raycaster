@@ -2,7 +2,19 @@ use glam::Vec2;
 
 use crate::map::Map;
 
-pub fn cast_ray(origin: Vec2, direction: Vec2, map: &Map) -> Option<f32> {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Side {
+    X,
+    Y,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct Hit {
+    pub distance: f32,
+    pub side: Side,
+}
+
+pub fn cast_ray(origin: Vec2, direction: Vec2, map: &Map) -> Option<Hit> {
     let mut cx = origin.x.floor() as i32;
     let mut cy = origin.y.floor() as i32;
 
@@ -22,22 +34,23 @@ pub fn cast_ray(origin: Vec2, direction: Vec2, map: &Map) -> Option<f32> {
     };
 
     for _ in 0..100 {
-        let hit_x = side_x < side_y;
-
-        if hit_x {
+        let side = if side_x < side_y {
             side_x += delta_x;
             cx += step_x;
+            Side::X
         } else {
             side_y += delta_y;
             cy += step_y;
-        }
+            Side::Y
+        };
 
         if map.is_wall(cx, cy) {
-            return Some(if hit_x {
-                side_x - delta_x
-            } else {
-                side_y - delta_y
-            });
+            let distance = match side {
+                Side::X => side_x - delta_x,
+                Side::Y => side_y - delta_y,
+            };
+
+            return Some(Hit { distance, side });
         }
     }
 
@@ -50,7 +63,7 @@ pub fn cast_rays(
     fov: f32,
     resolution: u32,
     map: &Map,
-) -> Vec<Option<f32>> {
+) -> Vec<Option<Hit>> {
     let plane = Vec2::new(-view_direction.y, view_direction.x) * (fov * 0.5).tan();
 
     (0..resolution)
