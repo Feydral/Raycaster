@@ -2,8 +2,8 @@ use glam::Vec2;
 
 use crate::map::Map;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Side {
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Side {
     X,
     Y,
 }
@@ -11,7 +11,8 @@ pub enum Side {
 #[derive(Clone, Copy, Debug)]
 pub struct Hit {
     pub distance: f32,
-    pub side: Side,
+    pub position: Vec2,
+    pub normal: Vec2,
 }
 
 pub fn cast_ray(origin: Vec2, direction: Vec2, map: &Map) -> Option<Hit> {
@@ -50,7 +51,16 @@ pub fn cast_ray(origin: Vec2, direction: Vec2, map: &Map) -> Option<Hit> {
                 Side::Y => side_y - delta_y,
             };
 
-            return Some(Hit { distance, side });
+            let normal = match side {
+                Side::X => Vec2::new(-step_x as f32, 0.0),
+                Side::Y => Vec2::new(0.0, -step_y as f32),
+            };
+
+            return Some(Hit {
+                distance,
+                position: origin + direction * distance,
+                normal,
+            });
         }
     }
 

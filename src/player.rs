@@ -3,6 +3,8 @@ use glam::Vec2;
 use crate::camera::Camera;
 use crate::map::Map;
 
+const EYE_HEIGHT: f32 = 0.5;
+
 pub struct PlayerInput {
     pub forward: f32,
     pub turn: f32,
@@ -33,9 +35,13 @@ impl Player {
             jump_velocity: 0.0,
             jump_strength: 2.5,
             rotation_speed: 2.0,
-            acceleration: 25.0,
+            acceleration: 40.0,
             friction: 12.0,
         }
+    }
+
+    pub fn eye_height(&self) -> f32 {
+        EYE_HEIGHT + self.jump_offset
     }
 
     pub fn update(&mut self, input: &PlayerInput, dt: f32, map: &Map) {

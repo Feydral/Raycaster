@@ -1,16 +1,18 @@
 mod camera;
+mod light;
 mod map;
 mod player;
 mod raycaster;
 mod render_target;
 mod renderer;
 
-use std::thread::sleep;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use crossterm::event::KeyCode;
+use glam::Vec3;
 use termcanvas::prelude::Input;
 
+use crate::light::Light;
 use crate::map::Map;
 use crate::player::{Player, PlayerInput};
 use crate::render_target::RenderTarget;
@@ -70,9 +72,13 @@ fn main() {
             target.width(),
             &map,
         );
-        renderer::render(&mut target, &hits, camera.fov, player.jump_offset);
 
-        sleep(Duration::from_millis(16));
+        let flashlight = Light::flashlight(
+            Vec3::new(player.position.x, player.position.y, player.eye_height()),
+            Vec3::new(camera.view_direction.x, camera.view_direction.y, 0.0),
+        );
+
+        renderer::render(&mut target, &player, &hits, &[flashlight]);
     }
 
     target.end();

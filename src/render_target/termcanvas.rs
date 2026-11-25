@@ -2,11 +2,20 @@ use termcanvas::prelude::*;
 
 use crate::render_target::{RenderTarget, Rgb};
 
-const COLOR_LEVELS: u32 = 32;
+const COLOR_LEVELS: u32 = 64;
 
-fn quantize(channel: u8) -> u8 {
-    let steps = COLOR_LEVELS - 1;
-    ((channel as u32 * steps + 127) / 255 * 255 / steps) as u8
+fn quantize(color: Rgb) -> Rgb {
+    let brightest = color[0].max(color[1]).max(color[2]);
+
+    if brightest == 0 {
+        return color;
+    }
+
+    let steps = (COLOR_LEVELS - 1) as f32;
+    let level = (brightest as f32 / 255.0 * steps).round();
+    let scale = level / steps * 255.0 / brightest as f32;
+
+    color.map(|channel| (channel as f32 * scale).round().min(255.0) as u8)
 }
 
 pub struct TermcanvasTarget {
@@ -40,9 +49,9 @@ impl RenderTarget for TermcanvasTarget {
         }
 
         let flipped_y = self.canvas.height() - 1 - y;
-        let [r, g, b] = color;
+        let [r, g, b] = quantize(color);
 
-        let packed = mathi::rgb_to_u32(quantize(r), quantize(g), quantize(b));
+        let packed = mathi::rgb_to_u32(r, g, b);
 
         self.canvas.set_pixel(x, flipped_y, packed);
     }
