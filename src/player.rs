@@ -5,7 +5,6 @@ use crate::map::Map;
 
 pub struct PlayerInput {
     pub forward: f32,
-    pub strafe: f32,
     pub turn: f32,
     pub jump: bool,
 }
@@ -34,7 +33,7 @@ impl Player {
             jump_velocity: 0.0,
             jump_strength: 2.5,
             rotation_speed: 2.0,
-            acceleration: 50.0,
+            acceleration: 25.0,
             friction: 12.0,
         }
     }
@@ -46,12 +45,9 @@ impl Player {
             .normalize();
 
         let view_direction = self.camera.view_direction;
-        let right = Vec2::new(-view_direction.y, view_direction.x);
 
-        let move_input = view_direction * input.forward + right * input.strafe;
-
-        if move_input.length() > 0.0 {
-            self.velocity += move_input.normalize() * self.acceleration * dt;
+        if input.forward != 0.0 {
+            self.velocity += view_direction * input.forward * self.acceleration * dt;
         }
 
         self.velocity *= (1.0 - self.friction * dt).max(0.0);
@@ -60,7 +56,7 @@ impl Player {
             self.jump_velocity = self.jump_strength;
 
             if self.velocity.length() > 0.01 {
-                self.velocity += view_direction * 1.8;
+                self.velocity += view_direction * 0.9;
             }
         }
 

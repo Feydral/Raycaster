@@ -2,6 +2,13 @@ use termcanvas::prelude::*;
 
 use crate::render_target::{RenderTarget, Rgb};
 
+const COLOR_LEVELS: u32 = 32;
+
+fn quantize(channel: u8) -> u8 {
+    let steps = COLOR_LEVELS - 1;
+    ((channel as u32 * steps + 127) / 255 * 255 / steps) as u8
+}
+
 pub struct TermcanvasTarget {
     canvas: Canvas,
 }
@@ -35,8 +42,9 @@ impl RenderTarget for TermcanvasTarget {
         let flipped_y = self.canvas.height() - 1 - y;
         let [r, g, b] = color;
 
-        self.canvas
-            .set_pixel(x, flipped_y, mathi::rgb_to_u32(r, g, b));
+        let packed = mathi::rgb_to_u32(quantize(r), quantize(g), quantize(b));
+
+        self.canvas.set_pixel(x, flipped_y, packed);
     }
 
     fn sync_size(&mut self) {

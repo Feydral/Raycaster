@@ -95,7 +95,6 @@ fn axis(input: &Input, positive: char, negative: char) -> f32 {
 fn read_player_input(input: &Input) -> PlayerInput {
     PlayerInput {
         forward: axis(input, 'w', 's'),
-        strafe: axis(input, 'e', 'q'),
         turn: axis(input, 'd', 'a'),
         jump: input.is_key_down(KeyCode::Char(' ')),
     }
