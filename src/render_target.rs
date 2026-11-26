@@ -1,3 +1,6 @@
+#[cfg(feature = "nanofb")]
+pub mod nanofb;
+#[cfg(feature = "termcanvas")]
 pub mod termcanvas;
 
 pub type Rgb = [u8; 3];

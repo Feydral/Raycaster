@@ -1,5 +1,8 @@
+use crossterm::event::KeyCode;
 use termcanvas::prelude::*;
 
+use crate::frontend::{FrameInput, Frontend};
+use crate::player::PlayerInput;
 use crate::render_target::{RenderTarget, Rgb};
 
 const COLOR_LEVELS: u32 = 64;
@@ -20,17 +23,15 @@ fn quantize(color: Rgb) -> Rgb {
 
 pub struct TermcanvasTarget {
     canvas: Canvas,
+    input: Input,
 }
 
 impl TermcanvasTarget {
     pub fn new() -> Self {
-        Self {
-            canvas: Canvas::new(),
-        }
-    }
+        let input = Input::new();
+        let canvas = Canvas::new();
 
-    pub fn end(self) {
-        self.canvas.end();
+        Self { canvas, input }
     }
 }
 
@@ -67,5 +68,39 @@ impl RenderTarget for TermcanvasTarget {
 
     fn present(&mut self) {
         self.canvas.render();
+    }
+}
+
+fn axis(input: &Input, positive: char, negative: char) -> f32 {
+    let mut value = 0.0;
+
+    if input.is_key_pressed(KeyCode::Char(positive)) {
+        value += 1.0;
+    }
+
+    if input.is_key_pressed(KeyCode::Char(negative)) {
+        value -= 1.0;
+    }
+
+    value
+}
+
+impl Frontend for TermcanvasTarget {
+    fn poll_input(&mut self) -> FrameInput {
+        self.input.update().expect("Failed to update input");
+
+        FrameInput {
+            player: PlayerInput {
+                forward: axis(&self.input, 'w', 's'),
+                turn: axis(&self.input, 'd', 'a'),
+                jump: self.input.is_key_down(KeyCode::Char(' ')),
+            },
+            quit: self.input.is_key_pressed(KeyCode::Esc),
+        }
+    }
+
+    fn shutdown(self: Box<Self>) {
+        let this = *self;
+        this.canvas.end();
     }
 }

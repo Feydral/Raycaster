@@ -1,5 +1,6 @@
 mod camera;
 mod flashlight;
+mod frontend;
 mod map;
 mod player;
 mod raycaster;
@@ -8,15 +9,11 @@ mod renderer;
 
 use std::time::Instant;
 
-use crossterm::event::KeyCode;
 use glam::Vec3;
-use termcanvas::prelude::Input;
 
 use crate::flashlight::Flashlight;
 use crate::map::Map;
-use crate::player::{Player, PlayerInput};
-use crate::render_target::RenderTarget;
-use crate::render_target::termcanvas::TermcanvasTarget;
+use crate::player::Player;
 
 fn main() {
     let map = Map::from_rows(&[
@@ -44,8 +41,7 @@ fn main() {
 
     let mut player = Player::new();
 
-    let mut input = Input::new();
-    let mut target = TermcanvasTarget::new();
+    let mut frontend = frontend::create();
 
     let mut last_time = Instant::now();
 
@@ -54,22 +50,22 @@ fn main() {
         let dt = now.duration_since(last_time).as_secs_f32();
         last_time = now;
 
-        input.update().expect("Failed to update input");
+        let input = frontend.poll_input();
 
-        if input.is_key_pressed(KeyCode::Esc) {
+        if input.quit {
             break;
         }
 
-        player.update(&read_player_input(&input), dt, &map);
+        player.update(&input.player, dt, &map);
 
-        target.sync_size();
+        frontend.sync_size();
 
         let camera = &player.camera;
         let hits = raycaster::cast_rays(
             player.position,
             camera.view_direction,
             camera.fov,
-            target.width(),
+            frontend.width(),
             &map,
         );
 
@@ -78,30 +74,8 @@ fn main() {
             Vec3::new(camera.view_direction.x, camera.view_direction.y, 0.0),
         );
 
-        renderer::render(&mut target, &player, &hits, &flashlight);
+        renderer::render(&mut *frontend, &player, &hits, &flashlight);
     }
 
-    target.end();
-}
-
-fn axis(input: &Input, positive: char, negative: char) -> f32 {
-    let mut value = 0.0;
-
-    if input.is_key_pressed(KeyCode::Char(positive)) {
-        value += 1.0;
-    }
-
-    if input.is_key_pressed(KeyCode::Char(negative)) {
-        value -= 1.0;
-    }
-
-    value
-}
-
-fn read_player_input(input: &Input) -> PlayerInput {
-    PlayerInput {
-        forward: axis(input, 'w', 's'),
-        turn: axis(input, 'd', 'a'),
-        jump: input.is_key_down(KeyCode::Char(' ')),
-    }
+    frontend.shutdown();
 }
