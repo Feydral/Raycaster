@@ -12,3 +12,17 @@ pub trait RenderTarget {
     fn sync_size(&mut self);
     fn present(&mut self);
 }
+
+pub fn quantize(color: Rgb, levels: u32) -> Rgb {
+    let brightest = color[0].max(color[1]).max(color[2]);
+
+    if brightest == 0 {
+        return color;
+    }
+
+    let steps = (levels - 1) as f32;
+    let level = (brightest as f32 / 255.0 * steps).round();
+    let scale = level / steps * 255.0 / brightest as f32;
+
+    color.map(|channel| (channel as f32 * scale).round().min(255.0) as u8)
+}

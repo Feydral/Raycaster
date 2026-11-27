@@ -1,5 +1,10 @@
 use glam::Vec3;
 
+const BRIGHTNESS: f32 = 9.8;
+const RANGE: f32 = 27.0;
+const INNER_ANGLE: f32 = 11.0;
+const OUTER_ANGLE: f32 = 24.0;
+
 pub struct Flashlight {
     pub position: Vec3,
     pub direction: Vec3,
@@ -19,10 +24,10 @@ impl Flashlight {
         Self {
             position,
             direction: direction.normalize(),
-            color: Vec3::new(1.0, 0.95, 0.8) * 5.0,
-            range: 15.0,
-            inner_cos: 12f32.to_radians().cos(),
-            outer_cos: 28f32.to_radians().cos(),
+            color: Vec3::new(1.0, 0.95, 0.8) * BRIGHTNESS,
+            range: RANGE,
+            inner_cos: INNER_ANGLE.to_radians().cos(),
+            outer_cos: OUTER_ANGLE.to_radians().cos(),
         }
     }
 

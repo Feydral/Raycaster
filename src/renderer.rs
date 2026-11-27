@@ -5,7 +5,7 @@ use crate::player::Player;
 use crate::raycaster::Hit;
 use crate::render_target::{RenderTarget, Rgb};
 
-const AMBIENT: f32 = 0.06;
+const AMBIENT: f32 = 0.025;
 const WALL_HEIGHT: f32 = 1.0;
 const CEILING_ALBEDO: Vec3 = Vec3::new(0.82, 0.8, 0.59);
 const FLOOR_ALBEDO: Vec3 = Vec3::new(0.45, 0.42, 0.18);
@@ -78,6 +78,4 @@ pub fn render(
             target.set_pixel(x as u32, y, to_rgb(WALL_ALBEDO, light));
         }
     }
-
-    target.present();
 }

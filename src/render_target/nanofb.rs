@@ -2,12 +2,13 @@ use nanofb::prelude::*;
 
 use crate::frontend::{FrameInput, Frontend};
 use crate::player::PlayerInput;
-use crate::render_target::{RenderTarget, Rgb};
+use crate::render_target::{RenderTarget, Rgb, quantize};
 
+const COLOR_LEVELS: u32 = 64;
 const WINDOW_WIDTH: u32 = 1280;
 const WINDOW_HEIGHT: u32 = 720;
-const BUFFER_WIDTH: u32 = 320;
-const BUFFER_HEIGHT: u32 = 180;
+const BUFFER_WIDTH: u32 = 640;
+const BUFFER_HEIGHT: u32 = 360;
 
 pub struct NanofbTarget {
     window: Window,
@@ -47,7 +48,7 @@ impl RenderTarget for NanofbTarget {
             return;
         }
 
-        let [r, g, b] = color;
+        let [r, g, b] = quantize(color, COLOR_LEVELS);
         let index = (y * self.width() + x) as usize;
 
         self.buffer[index] = Color::from_rgb(r, g, b);

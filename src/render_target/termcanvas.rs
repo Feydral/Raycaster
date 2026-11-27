@@ -3,23 +3,9 @@ use termcanvas::prelude::*;
 
 use crate::frontend::{FrameInput, Frontend};
 use crate::player::PlayerInput;
-use crate::render_target::{RenderTarget, Rgb};
+use crate::render_target::{RenderTarget, Rgb, quantize};
 
 const COLOR_LEVELS: u32 = 64;
-
-fn quantize(color: Rgb) -> Rgb {
-    let brightest = color[0].max(color[1]).max(color[2]);
-
-    if brightest == 0 {
-        return color;
-    }
-
-    let steps = (COLOR_LEVELS - 1) as f32;
-    let level = (brightest as f32 / 255.0 * steps).round();
-    let scale = level / steps * 255.0 / brightest as f32;
-
-    color.map(|channel| (channel as f32 * scale).round().min(255.0) as u8)
-}
 
 pub struct TermcanvasTarget {
     canvas: Canvas,
@@ -50,7 +36,7 @@ impl RenderTarget for TermcanvasTarget {
         }
 
         let flipped_y = self.canvas.height() - 1 - y;
-        let [r, g, b] = quantize(color);
+        let [r, g, b] = quantize(color, COLOR_LEVELS);
 
         let packed = mathi::rgb_to_u32(r, g, b);
 

@@ -75,6 +75,8 @@ fn main() {
         );
 
         renderer::render(&mut *frontend, &player, &hits, &flashlight);
+
+        frontend.present();
     }
 
     frontend.shutdown();
